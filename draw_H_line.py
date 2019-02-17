@@ -59,13 +59,14 @@ with open('test.csv', 'w', newline='') as csvfile:
             rmat1 = np.zeros((3, 3))
             cv2.Rodrigues(rvec1, rmat1)
             rmat1 = np.transpose(rmat1)
+
             Horizontal_offset = np.float32([[-1, 0.075, 0], [1, 0.075, 0]])
 
-            imgpts1, jac1 = cv2.projectPoints(Horizontal_offset, rvec1, tvec1, mtx, (0, 0, 0, 0))
+            imgpts1, jac1 = cv2.projectPoints(Horizontal_offset, rvec1, tvec1, mtx, dist)
             imgpts1 = np.int32(imgpts1).reshape(-1, 2)
             cv2.line(frame, tuple(imgpts1[0]), tuple(imgpts1[1]), (255, 0, 0), 1)
             ####
-            imgpts2, jac2 = cv2.projectPoints(Horizontal, rvec1, tvec2, mtx, (0, 0, 0, 0))
+            imgpts2, jac2 = cv2.projectPoints(Horizontal, rvec1, tvec2, mtx, dist)
             imgpts2 = np.int32(imgpts2).reshape(-1, 2)
             cv2.line(frame, tuple(imgpts2[0]), tuple(imgpts2[1]), (255, 0, 0), 1)
             ####

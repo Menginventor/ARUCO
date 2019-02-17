@@ -28,36 +28,74 @@ class CV_Thread(QtCore.QThread):
     def __del__(self):
         self.wait()
     def run(self):
+
         while True:
             self.ret, self.frame = cap.read()
             self.rgbImage = cv2.cvtColor(self.frame, cv2.COLOR_BGR2RGB)
 
-            self.frame = cv2.undistort(self.frame, mtx, dist, None, newcameramtx)
+            self.frame = cv2.undistort(self.frame, mtx, dist,None, newcameramtx)
 
             # Our operations on the frame come here
             gray = cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
-            h, w =   self.frame.shape[:2]
-            print(h,w)
             corners, ids, rejectedImgPoints = aruco.detectMarkers(gray, aruco_dict, parameters=parameters)
             aruco.drawDetectedMarkers(self.frame, corners, ids)
 
-            index_id_0 = None
-            index_id_1 = None
+            self.index_id_0 = None
+            self.index_id_1 = None
+            self.ref_revec = None
             for i in range(len(corners)):
                 if ids[i][0] == 0:
-                    index_id_0 = i
+                    self.index_id_0 = i
 
                 elif ids[i][0] == 1:
-                    index_id_1 = i
+                    self.index_id_1 = i
+
+            if self.index_id_0 != None:
+
+
+                rvec1, tvec1, obj1 = aruco.estimatePoseSingleMarkers(corners[self.index_id_0], markerLength, newcameramtx,(0,0,0,0))
+                aruco.drawAxis(self.frame, newcameramtx, dist, rvec1, tvec1, 0.075)
+                H_Line = np.float32([[-1, 0, 0], [1, 0, 0]])
+
+                imgpts, jac = cv2.projectPoints(H_Line, rvec1, tvec1, newcameramtx, dist)
+                imgpts = np.int32(imgpts).reshape(-1, 2)
+
+                cv2.line(self.frame, tuple(imgpts[0]), tuple(imgpts[1]), (255, 0, 0), 1)
+                self.ref_revec = rvec1
+            if self.index_id_1 != None:
+                rvec2, tvec2, obj2 = aruco.estimatePoseSingleMarkers(corners[self.index_id_1], markerLength,
+                                                                     newcameramtx, dist)
+                aruco.drawAxis(self.frame, newcameramtx, dist, rvec2, tvec2, 0.075)
+                if not REF_RVEC is None:
+                    rmat1 = np.identity(3)
+                    cv2.Rodrigues(REF_RVEC, rmat1)
+                    rmat1 = np.transpose(rmat1)
+                    relate_tvec = np.matmul(rmat1, tvec2[0][0])
+                    print(relate_tvec)
+                    upper_H_offest = np.float32([[-1, 0.05, 0], [1, 0.05, 0]])
+                    lower_H_offest = np.float32([[-1, -0.05, 0], [1, -0.05, 0]])
+                    imgpts_up, jac_up = cv2.projectPoints(upper_H_offest, REF_RVEC, tvec2, newcameramtx, (0,0,0,0))
+                    imgpts_lw, jac_lw = cv2.projectPoints(lower_H_offest, REF_RVEC, tvec2, newcameramtx, (0,0,0,0))
+                    imgpts_up = np.int32(imgpts_up).reshape(-1, 2)
+                    imgpts_lw = np.int32(imgpts_lw).reshape(-1, 2)
+                    cv2.line(self.frame, tuple(imgpts_up[0]), tuple(imgpts_up[1]), (0, 0, 255), 2)
+                    cv2.line(self.frame, tuple(imgpts_lw[0]), tuple(imgpts_lw[1]), (0, 0, 255), 2)
 
             self.cv_update_signal.emit()
 
-
 class main_widget(QWidget):
+    running_state = 'Idle'
     def cv_update(self):
         self.image = self.CV_Thread.frame
         self.displayImage()
-
+        if self.CV_Thread.index_id_0 != None:
+            self.setup_btn.setEnabled(True)
+        else:
+            self.setup_btn.setEnabled(False)
+        if self.CV_Thread.index_id_1 != None and (not REF_RVEC is None) and  self.running_state == 'Idle':
+            self.start_btn.setEnabled(True)
+        else:
+            self.start_btn.setEnabled(False)
     def __init__(self,parent):
         super().__init__()
         self.parent = parent
@@ -67,7 +105,6 @@ class main_widget(QWidget):
         self.CV_Thread = CV_Thread(self)
         self.CV_Thread.start()
         self.CV_Thread.cv_update_signal.connect(self.cv_update)
-
     def initUI(self):
         self.label.setText('OpenCV Image')
         self.label.setAlignment(Qt.AlignCenter)
@@ -83,26 +120,35 @@ class main_widget(QWidget):
         self.stop_btn = QPushButton('Stop', self)
         font = QtGui.QFont()
         font.setPointSize(24)
-
         self.setup_btn.setFont(font)
         self.start_btn.setFont(font)
+        self.start_btn.setEnabled(False)
+        self.pause_btn.setEnabled(False)
+        self.stop_btn.setEnabled(False)
         self.start_btn.setFont(font)
         self.pause_btn.setFont(font)
         self.stop_btn.setFont(font)
-
         ####
-        #self.connect_button.clicked.connect(self.serial_connect)
+        self.setup_btn.clicked.connect(self.setup_oreintation)
+        self.start_btn.clicked.connect(self.start_record)
         ###
         panel = QVBoxLayout(self)
         panel.addWidget(self.setup_btn)
         panel.addWidget(self.start_btn)
         panel.addWidget(self.pause_btn)
         panel.addWidget(self.stop_btn)
-
         verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
         panel.addItem(verticalSpacer)
         return panel
+    def setup_oreintation(self):
+        print('setup!')
+        global REF_RVEC
+        REF_RVEC = self.CV_Thread.ref_revec
+        print(REF_RVEC)
 
+    def start_record(self):
+        print('start_record')
+        self.running_state = 'Idle'
     def displayImage(self):
         size = self.image.shape
         step = self.image.size / size[0]
@@ -133,6 +179,9 @@ def load_camera_calib():
     global markerLength
     global aruco_dict
     global parameters
+    global REF_RVEC
+
+    REF_RVEC = None
     newcameramtx, roi = cv2.getOptimalNewCameraMatrix(mtx, dist, (w, h), 1, (w, h))
     markerLength = 0.15
     aruco_dict = aruco.Dictionary_get(aruco.DICT_6X6_250)
@@ -186,15 +235,10 @@ def main():
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
     load_camera_calib()
-
     app = QApplication(sys.argv)
-
     w = main_window()
     w.show()
     sys.exit(app.exec_())
-
-
-
 
 if __name__ == '__main__':
     main()

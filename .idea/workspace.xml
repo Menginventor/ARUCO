@@ -14,12 +14,27 @@
       <file leaf-file-name="Thammasat_University_ArUco_Tracker.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/Thammasat_University_ArUco_Tracker.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="25">
-              <caret line="93" column="9" lean-forward="false" selection-start-line="93" selection-start-column="9" selection-end-line="93" selection-end-column="9" />
+            <state relative-caret-position="334">
+              <caret line="60" column="56" lean-forward="true" selection-start-line="60" selection-start-column="56" selection-end-line="60" selection-end-column="56" />
               <folding>
                 <element signature="e#112#122#0" expanded="true" />
-                <element signature="e#3845#4505#0" expanded="false" />
-                <element signature="e#4542#6006#0" expanded="false" />
+                <element signature="e#4140#4401#0" expanded="false" />
+                <element signature="e#4432#4694#0" expanded="false" />
+                <element signature="e#4731#5780#0" expanded="false" />
+                <element signature="e#5822#5929#0" expanded="false" />
+                <element signature="e#7455#8693#0" expanded="false" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="draw_H_line.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/draw_H_line.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="244">
+              <caret line="48" column="77" lean-forward="true" selection-start-line="48" selection-start-column="18" selection-end-line="48" selection-end-column="77" />
+              <folding>
+                <element signature="e#0#10#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -51,6 +66,10 @@
       <find>newcameramtx</find>
       <find>serial_log_update</find>
       <find>spacer</find>
+      <find>setEna</find>
+      <find>REF_RVEC</find>
+      <find>glo</find>
+      <find>flo</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -123,6 +142,15 @@
               <item name="calib" type="462c0819:PsiDirectoryNode" />
               <item name="src" type="462c0819:PsiDirectoryNode" />
               <item name="calib_pic" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="ArUco" type="b2602c69:ProjectViewProjectNode" />
+              <item name="Meng_Serial-Monitor" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="ArUco" type="b2602c69:ProjectViewProjectNode" />
+              <item name="Meng_Serial-Monitor" type="462c0819:PsiDirectoryNode" />
+              <item name="Source" type="462c0819:PsiDirectoryNode" />
             </path>
           </expand>
           <select />
@@ -340,8 +368,8 @@
     <recent_temporary>
       <list size="5">
         <item index="0" class="java.lang.String" itemvalue="Python.Thammasat_University_ArUco_Tracker" />
-        <item index="1" class="java.lang.String" itemvalue="Python.video_test" />
-        <item index="2" class="java.lang.String" itemvalue="Python.draw_H_line" />
+        <item index="1" class="java.lang.String" itemvalue="Python.draw_H_line" />
+        <item index="2" class="java.lang.String" itemvalue="Python.video_test" />
         <item index="3" class="java.lang.String" itemvalue="Python.teat" />
         <item index="4" class="java.lang.String" itemvalue="Python.ArucoTrack (1)" />
       </list>
@@ -388,7 +416,9 @@
     <option name="myLimit" value="2678400000" />
   </component>
   <component name="XDebuggerManager">
-    <breakpoint-manager />
+    <breakpoint-manager>
+      <option name="time" value="3" />
+    </breakpoint-manager>
     <watches-manager />
   </component>
   <component name="editorHistoryManager">
@@ -741,20 +771,10 @@
         <state />
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/draw_H_line.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="296">
-          <caret line="50" column="0" lean-forward="false" selection-start-line="50" selection-start-column="0" selection-end-line="50" selection-end-column="0" />
-          <folding>
-            <element signature="e#0#10#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/../Meng_Serial-Monitor/Source/Serial_monitor.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="419">
-          <caret line="226" column="64" lean-forward="true" selection-start-line="226" selection-start-column="8" selection-end-line="226" selection-end-column="64" />
+        <state relative-caret-position="194">
+          <caret line="186" column="34" lean-forward="false" selection-start-line="186" selection-start-column="28" selection-end-line="186" selection-end-column="34" />
           <folding>
             <element signature="e#0#29#0" expanded="true" />
           </folding>
@@ -771,14 +791,27 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/draw_H_line.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="244">
+          <caret line="48" column="77" lean-forward="true" selection-start-line="48" selection-start-column="18" selection-end-line="48" selection-end-column="77" />
+          <folding>
+            <element signature="e#0#10#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/Thammasat_University_ArUco_Tracker.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="25">
-          <caret line="93" column="9" lean-forward="false" selection-start-line="93" selection-start-column="9" selection-end-line="93" selection-end-column="9" />
+        <state relative-caret-position="334">
+          <caret line="60" column="56" lean-forward="true" selection-start-line="60" selection-start-column="56" selection-end-line="60" selection-end-column="56" />
           <folding>
             <element signature="e#112#122#0" expanded="true" />
-            <element signature="e#3845#4505#0" expanded="false" />
-            <element signature="e#4542#6006#0" expanded="false" />
+            <element signature="e#4140#4401#0" expanded="false" />
+            <element signature="e#4432#4694#0" expanded="false" />
+            <element signature="e#4731#5780#0" expanded="false" />
+            <element signature="e#5822#5929#0" expanded="false" />
+            <element signature="e#7455#8693#0" expanded="false" />
           </folding>
         </state>
       </provider>
