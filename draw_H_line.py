@@ -51,12 +51,6 @@ with open('test.csv', 'w', newline='') as csvfile:
 
 
 
-                #rmat = np.zeros((3, 3))
-                #cv2.Rodrigues(rvec,rmat)
-                #print(rmat)
-                #[[[-0.0472865  -0.04246176  1.37027699]]]
-
-
         if index_id_0 != None and index_id_1 != None:
 
             rvec1, tvec1, obj1 = aruco.estimatePoseSingleMarkers(corners[index_id_0], markerLength, newcameramtx, dist)

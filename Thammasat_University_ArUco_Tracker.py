@@ -36,6 +36,8 @@ class CV_Thread(QtCore.QThread):
 
             # Our operations on the frame come here
             gray = cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
+            h, w =   self.frame.shape[:2]
+            print(h,w)
             corners, ids, rejectedImgPoints = aruco.detectMarkers(gray, aruco_dict, parameters=parameters)
             aruco.drawDetectedMarkers(self.frame, corners, ids)
 
@@ -44,10 +46,10 @@ class CV_Thread(QtCore.QThread):
             for i in range(len(corners)):
                 if ids[i][0] == 0:
                     index_id_0 = i
-                    print('found ID 0')
+
                 elif ids[i][0] == 1:
                     index_id_1 = i
-                    print('found ID 0')
+
             self.cv_update_signal.emit()
 
 
@@ -65,17 +67,44 @@ class main_widget(QWidget):
         self.CV_Thread = CV_Thread(self)
         self.CV_Thread.start()
         self.CV_Thread.cv_update_signal.connect(self.cv_update)
+
     def initUI(self):
         self.label.setText('OpenCV Image')
         self.label.setAlignment(Qt.AlignCenter)
-        top_bar = QHBoxLayout()
-        root = QVBoxLayout(self)
-        root.addLayout(top_bar)
+        self.label.resize(1280,720)
+        root = QHBoxLayout(self)
         root.addWidget(self.label)
-        self.resize(1028, 720)
-        self.setWindowTitle('OpenCV & PyQT 5 by Tutor de Programacion')
+        root.addLayout(self.create_panel())
+        #self.resize(1028, 720)
+    def create_panel(self):
+        self.setup_btn = QPushButton('Setup', self)
+        self.start_btn = QPushButton('Start', self)
+        self.pause_btn = QPushButton('Pause', self)
+        self.stop_btn = QPushButton('Stop', self)
+        font = QtGui.QFont()
+        font.setPointSize(24)
 
-    def displayImage(self):
+        self.setup_btn.setFont(font)
+        self.start_btn.setFont(font)
+        self.start_btn.setFont(font)
+        self.pause_btn.setFont(font)
+        self.stop_btn.setFont(font)
+
+        ####
+        self.setup_btn.clicked.connect(self.set_orientation)
+        ###
+        panel = QVBoxLayout(self)
+        panel.addWidget(self.setup_btn)
+        panel.addWidget(self.start_btn)
+        panel.addWidget(self.pause_btn)
+        panel.addWidget(self.stop_btn)
+
+        verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
+        panel.addItem(verticalSpacer)
+        return panel
+    def set_orientation(self):
+
+def displayImage(self):
         size = self.image.shape
         step = self.image.size / size[0]
         qformat = QImage.Format_Indexed8
@@ -115,8 +144,8 @@ class main_window(QMainWindow):
         #QMainWindow.__init__(self)
         self.initUI()
     def initUI(self):
-        self.setGeometry(300, 300, 500, 600)
-        self.setWindowTitle("Serial Monitor")
+        self.setGeometry(100, 100, 1500, 720)
+        self.setWindowTitle("Thammasat University ArUco Tracker")
         self.setWindowIcon(QtGui.QIcon('py_logo.png'))
         mainMenu = self.menuBar()
         fileMenu = mainMenu.addMenu('File')
@@ -146,30 +175,24 @@ class main_window(QMainWindow):
         self.main_widget = main_widget(self)
         self.setCentralWidget(self.main_widget)
 
-
-
-
     def closeEvent(self, event):
+        print('clossing')
         pass
 
 
-
 def main():
-    app = QApplication(sys.argv)
-
-    w = main_window()
-    w.show()
-    sys.exit(app.exec_())
-
-
-
-
-if __name__ == '__main__':
     global cap
     cap = cv2.VideoCapture(0)
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
     load_camera_calib()
 
+    app = QApplication(sys.argv)
+
+    w = main_window()
+    w.show()
+    sys.exit(app.exec_())
+
+if __name__ == '__main__':
     main()
 

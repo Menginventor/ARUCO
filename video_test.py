@@ -2,7 +2,10 @@ import numpy as np
 import cv2
 
 cap = cv2.VideoCapture(0)
-
+cap.set(cv2.CAP_PROP_FRAME_WIDTH,1280)
+cap.set(cv2.CAP_PROP_FRAME_HEIGHT,720)
+result = str(cap.get(cv2.CAP_PROP_FRAME_WIDTH)),str(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+print(result)
 while(True):
     # Capture frame-by-frame
     ret, frame = cap.read()
