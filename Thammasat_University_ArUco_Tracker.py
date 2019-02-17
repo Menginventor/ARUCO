@@ -3,12 +3,13 @@ Thank for gretest code
 https://github.com/TutorProgramacion/pyqt-tutorial/blob/master/10-opencv/main.py
 '''
 import sys
+import time
 import cv2
 from cv2 import aruco
 import yaml
 import csv
 import numpy as np
-
+import csv
 from PyQt5.QtGui import QImage, QPixmap
 from PyQt5.QtWidgets import QWidget, QApplication, QLabel, QVBoxLayout, QHBoxLayout, QPushButton, QFileDialog
 from PyQt5.QtCore import Qt
@@ -68,15 +69,15 @@ class CV_Thread(QtCore.QThread):
                                                                      newcameramtx, dist)
                 aruco.drawAxis(self.frame, newcameramtx, dist, rvec2, tvec2, 0.075)
                 if not REF_RVEC is None:
-                    self.ref_tvec = tvec2
+                    self.ref_tvec = np.copy(tvec2)
                     if not (REF_TVEC is None):
                         self.ref_tvec[0][0][0] = REF_TVEC[0][0][0]
                         self.ref_tvec[0][0][1] = REF_TVEC[0][0][1]
-                    print(REF_TVEC)
+                    #print(REF_TVEC)
                     rmat1 = np.identity(3)
                     cv2.Rodrigues(REF_RVEC, rmat1)
                     rmat1 = np.transpose(rmat1)
-                    relate_tvec = np.matmul(rmat1, tvec2[0][0])
+
 
                     upper_H_offest = np.float32([[-1, 0.05, 0], [1, 0.05, 0]])
                     lower_H_offest = np.float32([[-1, -0.05, 0], [1, -0.05, 0]])
@@ -87,7 +88,16 @@ class CV_Thread(QtCore.QThread):
 
                     cv2.line(self.frame, tuple(imgpts_up[0]), tuple(imgpts_up[1]), (0, 0, 255), 2)
                     cv2.line(self.frame, tuple(imgpts_lw[0]), tuple(imgpts_lw[1]), (0, 0, 255), 2)
-
+                    if self.parent.running_state == 'Recording':
+                        #print('recording')
+                        with open('log/' + str(temp_log_filename) + '.csv', 'a', newline='') as csvfile:
+                            #['time stamp', 'pos x', 'pos y', 'pos z']
+                            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+                            global start_time
+                            crr_time = time.clock() - start_time
+                            relate_tvec = np.matmul(rmat1, np.subtract(tvec2[0][0], REF_TVEC[0][0]))
+                            writer.writerow({'time stamp':crr_time,'pos x': relate_tvec[0], 'pos y': relate_tvec[1], 'pos z': relate_tvec[2]})
+                            print(relate_tvec)
             self.cv_update_signal.emit()
 
 class main_widget(QWidget):
@@ -158,6 +168,24 @@ class main_widget(QWidget):
         self.running_state = 'Recording'
         global REF_TVEC
         REF_TVEC = self.CV_Thread.ref_tvec
+        global temp_log_filename
+
+        file_name_err = True
+        while file_name_err:
+            temp_log_filename = time.strftime("%d-%b-%Y-%H-%M-%S", time.localtime())
+            print(temp_log_filename)
+            try:
+                with open('log/'+str(temp_log_filename)+'.csv', 'w', newline='') as csvfile:
+
+                    writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+                    writer.writeheader()
+                    file_name_err = False
+            except Exception as e:
+                print(e)
+                file_name_err = True
+
+        global start_time
+        start_time = time.clock()
     def displayImage(self):
         size = self.image.shape
         step = self.image.size / size[0]
@@ -190,7 +218,10 @@ def load_camera_calib():
     global parameters
     global REF_RVEC
     global REF_TVEC
-
+    global temp_log_filename
+    global fieldnames
+    fieldnames = ['time stamp', 'pos x', 'pos y', 'pos z']
+    temp_log_filename = ''
     REF_RVEC = None
     REF_TVEC = None
     newcameramtx, roi = cv2.getOptimalNewCameraMatrix(mtx, dist, (w, h), 1, (w, h))
@@ -245,6 +276,7 @@ def main():
     cap = cv2.VideoCapture(0)
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+    global start_time
     load_camera_calib()
     app = QApplication(sys.argv)
     w = main_window()
