@@ -97,7 +97,7 @@ class CV_Thread(QtCore.QThread):
                             crr_time = time.clock() - start_time
                             relate_tvec = np.matmul(rmat1, np.subtract(tvec2[0][0], REF_TVEC[0][0]))
                             writer.writerow({'time stamp':crr_time,'pos x': relate_tvec[0], 'pos y': relate_tvec[1], 'pos z': relate_tvec[2]})
-                            print(relate_tvec)
+                            #print(relate_tvec)
             self.cv_update_signal.emit()
 
 class main_widget(QWidget):
@@ -105,7 +105,7 @@ class main_widget(QWidget):
     def cv_update(self):
         self.image = self.CV_Thread.frame
         self.displayImage()
-        if self.CV_Thread.index_id_0 != None:
+        if self.CV_Thread.index_id_0 != None and self.running_state == 'Idle':
             self.setup_btn.setEnabled(True)
         else:
             self.setup_btn.setEnabled(False)
@@ -113,50 +113,72 @@ class main_widget(QWidget):
             self.start_btn.setEnabled(True)
         else:
             self.start_btn.setEnabled(False)
+        if self.running_state == 'Recording':
+            global start_time
+            crr_time = time.clock() - start_time
+            millis = str(int(crr_time*1000)%1000)
+            secs = str(int(crr_time ) % 60)
+            min = str(int(crr_time/60))
+            self.Timer_label.setText(min+':'+secs+':'+millis)
+            self.stop_btn.setEnabled(True)
+        elif self.running_state == 'Idle':
+            self.Timer_label.setText('00:00:000')
+            self.stop_btn.setEnabled(False)
     def __init__(self,parent):
         super().__init__()
         self.parent = parent
         self.image = None
-        self.label = QLabel()
+        self.image_disp_label = QLabel()
         self.initUI()
         self.CV_Thread = CV_Thread(self)
         self.CV_Thread.start()
         self.CV_Thread.cv_update_signal.connect(self.cv_update)
     def initUI(self):
-        self.label.setText('OpenCV Image')
-        self.label.setAlignment(Qt.AlignCenter)
-        self.label.resize(1280,720)
+
         root = QHBoxLayout(self)
-        root.addWidget(self.label)
+        cam_latout = QVBoxLayout(self)
+        self.Timer_label = QLabel()
+        self.Timer_label.setText('00:00:000')
+        font = QtGui.QFont()
+        font.setPointSize(36)
+        self.Timer_label.setFont(font)
+        cam_latout.addWidget(self.Timer_label)
+        cam_latout.addWidget(self.image_disp_label)
+
+        root.addLayout(cam_latout)
         root.addLayout(self.create_panel())
         #self.resize(1028, 720)
     def create_panel(self):
         self.setup_btn = QPushButton('Setup', self)
         self.start_btn = QPushButton('Start', self)
-        self.pause_btn = QPushButton('Pause', self)
+
         self.stop_btn = QPushButton('Stop', self)
         font = QtGui.QFont()
         font.setPointSize(24)
         self.setup_btn.setFont(font)
         self.start_btn.setFont(font)
         self.start_btn.setEnabled(False)
-        self.pause_btn.setEnabled(False)
+
         self.stop_btn.setEnabled(False)
         self.start_btn.setFont(font)
-        self.pause_btn.setFont(font)
+
         self.stop_btn.setFont(font)
         ####
         self.setup_btn.clicked.connect(self.setup_oreintation)
         self.start_btn.clicked.connect(self.start_record)
+        self.stop_btn.clicked.connect(self.stop_record)
+
+
         ###
         panel = QVBoxLayout(self)
         panel.addWidget(self.setup_btn)
         panel.addWidget(self.start_btn)
-        panel.addWidget(self.pause_btn)
+
         panel.addWidget(self.stop_btn)
         verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
         panel.addItem(verticalSpacer)
         return panel
+
     def setup_oreintation(self):
         print('setup!')
         global REF_RVEC
@@ -186,6 +208,57 @@ class main_widget(QWidget):
 
         global start_time
         start_time = time.clock()
+    def stop_record(self):
+        print('stop_record')
+        self.running_state = 'Pause'
+
+        ret = self.showdialog()
+        if ret == 2048:#saving
+            print('saving')
+            self.saveFile()
+
+
+        self.running_state = 'Idle'
+
+    def saveFile(self):
+        writen_file_name, _ = QFileDialog.getSaveFileName(self, "QFileDialog.getSaveFileName()", temp_log_filename,
+                                              "CSV Files (*.csv)")
+        global fieldnames
+        fieldnames = ['time stamp', 'pos x', 'pos y', 'pos z']
+
+
+        with open(writen_file_name, 'w', newline='') as writen_file:
+            writer = csv.DictWriter(writen_file, fieldnames=fieldnames)
+            writer.writeheader()
+            with open('log/' + str(temp_log_filename) + '.csv', newline='') as original_file:
+                reader = csv.reader(original_file)
+                reader_lst = list(reader)
+                for row in reader_lst[1:]:
+                    data = {
+                        'time stamp': row[0],
+                        'pos x': row[1],
+                        'pos y': row[2],
+                        'pos z': row[3]
+                    }
+                    writer.writerow(data)
+
+    def showdialog(self):
+        msg = QMessageBox()
+        msg.setIcon(QMessageBox.Information)
+        msg.setText("Do you want to save your log?")
+        #msg.setInformativeText("This is additional information")
+        msg.setWindowTitle("Message")
+
+
+
+        msg.setStandardButtons(QMessageBox.Save | QMessageBox.Discard);
+        msg.setDefaultButton(QMessageBox.Save);
+        #msg.buttonClicked.connect(msgbtn)
+
+        retval = msg.exec_()
+        print("value of pressed message box button:", retval)
+        return retval
+
     def displayImage(self):
         size = self.image.shape
         step = self.image.size / size[0]
@@ -197,8 +270,8 @@ class main_widget(QWidget):
                 qformat = QImage.Format_RGB888
         img = QImage(self.image, size[1], size[0], step, qformat)
         img = img.rgbSwapped()
-        self.label.setPixmap(QPixmap.fromImage(img))
-        self.resize(self.label.pixmap().size())
+        self.image_disp_label.setPixmap(QPixmap.fromImage(img))
+        self.resize(self.image_disp_label.pixmap().size())
 def load_camera_calib():
     global calib_data
     with open("calib/src/calib_data.yml", 'r') as stream:
@@ -266,7 +339,7 @@ class main_window(QMainWindow):
         self.setCentralWidget(self.main_widget)
 
     def closeEvent(self, event):
-        print('clossing')
+        print('closing')
         pass
 
 
@@ -282,7 +355,6 @@ def main():
     w = main_window()
     w.show()
     sys.exit(app.exec_())
-
 if __name__ == '__main__':
     main()
 
