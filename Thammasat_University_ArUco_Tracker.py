@@ -91,7 +91,7 @@ class main_widget(QWidget):
         self.stop_btn.setFont(font)
 
         ####
-        self.setup_btn.clicked.connect(self.set_orientation)
+        #self.connect_button.clicked.connect(self.serial_connect)
         ###
         panel = QVBoxLayout(self)
         panel.addWidget(self.setup_btn)
@@ -102,9 +102,8 @@ class main_widget(QWidget):
         verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
         panel.addItem(verticalSpacer)
         return panel
-    def set_orientation(self):
 
-def displayImage(self):
+    def displayImage(self):
         size = self.image.shape
         step = self.image.size / size[0]
         qformat = QImage.Format_Indexed8
@@ -180,6 +179,7 @@ class main_window(QMainWindow):
         pass
 
 
+
 def main():
     global cap
     cap = cv2.VideoCapture(0)
@@ -192,6 +192,9 @@ def main():
     w = main_window()
     w.show()
     sys.exit(app.exec_())
+
+
+
 
 if __name__ == '__main__':
     main()
