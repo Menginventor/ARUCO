@@ -29,7 +29,7 @@ with open('test.csv', 'w', newline='') as csvfile:
     while(True):
         # Capture frame-by-frame
         ret, frame = cap.read()
-        frame = cv2.undistort(frame, mtx, dist, None, mtx)
+        frame = cv2.undistort(frame, mtx, dist, None, newcameramtx)
         # Our operations on the frame come here
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
@@ -40,6 +40,7 @@ with open('test.csv', 'w', newline='') as csvfile:
         # lists of ids and the corners beloning to each id
         corners, ids, rejectedImgPoints = aruco.detectMarkers(gray, aruco_dict, parameters=parameters)
         aruco.drawDetectedMarkers(frame, corners,ids)
+
         index_id_0 = None
         index_id_1 = None
         for i in range(len(corners)):
@@ -47,18 +48,18 @@ with open('test.csv', 'w', newline='') as csvfile:
                 index_id_0 = i
             elif ids[i][0] == 1 :
                 index_id_1 = i
-        '''
+
         for i in range(len(corners)):
             if ids[i][0] == 0 or ids[i][0] == 1:
                 rvec, tvec, _ = aruco.estimatePoseSingleMarkers(corners[i], markerLength, newcameramtx, dist)
         
                 aruco.drawAxis(frame, newcameramtx, dist, rvec, tvec, 0.05)
         
-                rmat = np.zeros((3, 3))
-                cv2.Rodrigues(rvec,rmat)
-                print(rmat)
+                #rmat = np.zeros((3, 3))
+                #cv2.Rodrigues(rvec,rmat)
+                #print(rmat)
                 #[[[-0.0472865  -0.04246176  1.37027699]]]
-        '''
+
         if index_id_0 != None and index_id_1 != None:
             rmat1 = np.zeros((3, 3))
             rvec1, tvec1, obj1 = aruco.estimatePoseSingleMarkers(corners[index_id_0], markerLength, newcameramtx, dist)

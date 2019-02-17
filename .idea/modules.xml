@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/ArUco.iml" filepath="$PROJECT_DIR$/.idea/ArUco.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../Meng_Serial-Monitor/.idea/Meng_Serial-Monitor.iml" filepath="$PROJECT_DIR$/../Meng_Serial-Monitor/.idea/Meng_Serial-Monitor.iml" />
     </modules>
   </component>
 </project>
