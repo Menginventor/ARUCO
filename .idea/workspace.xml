@@ -14,15 +14,14 @@
       <file leaf-file-name="Thammasat_University_ArUco_Tracker.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/Thammasat_University_ArUco_Tracker.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="334">
-              <caret line="60" column="56" lean-forward="true" selection-start-line="60" selection-start-column="56" selection-end-line="60" selection-end-column="56" />
+            <state relative-caret-position="270">
+              <caret line="72" column="60" lean-forward="false" selection-start-line="72" selection-start-column="60" selection-end-line="72" selection-end-column="60" />
               <folding>
                 <element signature="e#112#122#0" expanded="true" />
-                <element signature="e#4140#4401#0" expanded="false" />
-                <element signature="e#4432#4694#0" expanded="false" />
-                <element signature="e#4731#5780#0" expanded="false" />
-                <element signature="e#5822#5929#0" expanded="false" />
-                <element signature="e#7455#8693#0" expanded="false" />
+                <element signature="e#4409#4670#0" expanded="false" />
+                <element signature="e#4701#4963#0" expanded="false" />
+                <element signature="e#5000#6049#0" expanded="false" />
+                <element signature="e#7835#9073#0" expanded="false" />
               </folding>
             </state>
           </provider>
@@ -803,15 +802,14 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/Thammasat_University_ArUco_Tracker.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="334">
-          <caret line="60" column="56" lean-forward="true" selection-start-line="60" selection-start-column="56" selection-end-line="60" selection-end-column="56" />
+        <state relative-caret-position="270">
+          <caret line="72" column="60" lean-forward="false" selection-start-line="72" selection-start-column="60" selection-end-line="72" selection-end-column="60" />
           <folding>
             <element signature="e#112#122#0" expanded="true" />
-            <element signature="e#4140#4401#0" expanded="false" />
-            <element signature="e#4432#4694#0" expanded="false" />
-            <element signature="e#4731#5780#0" expanded="false" />
-            <element signature="e#5822#5929#0" expanded="false" />
-            <element signature="e#7455#8693#0" expanded="false" />
+            <element signature="e#4409#4670#0" expanded="false" />
+            <element signature="e#4701#4963#0" expanded="false" />
+            <element signature="e#5000#6049#0" expanded="false" />
+            <element signature="e#7835#9073#0" expanded="false" />
           </folding>
         </state>
       </provider>

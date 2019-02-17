@@ -42,7 +42,8 @@ class CV_Thread(QtCore.QThread):
 
             self.index_id_0 = None
             self.index_id_1 = None
-            self.ref_revec = None
+            self.ref_rvec = None
+            self.ref_tvec = None
             for i in range(len(corners)):
                 if ids[i][0] == 0:
                     self.index_id_0 = i
@@ -61,23 +62,29 @@ class CV_Thread(QtCore.QThread):
                 imgpts = np.int32(imgpts).reshape(-1, 2)
 
                 cv2.line(self.frame, tuple(imgpts[0]), tuple(imgpts[1]), (255, 0, 0), 1)
-                self.ref_revec = rvec1
+                self.ref_rvec = rvec1
             if self.index_id_1 != None:
                 rvec2, tvec2, obj2 = aruco.estimatePoseSingleMarkers(corners[self.index_id_1], markerLength,
                                                                      newcameramtx, dist)
                 aruco.drawAxis(self.frame, newcameramtx, dist, rvec2, tvec2, 0.075)
                 if not REF_RVEC is None:
+                    self.ref_tvec = tvec2
+                    if not (REF_TVEC is None):
+                        self.ref_tvec[0][0][0] = REF_TVEC[0][0][0]
+                        self.ref_tvec[0][0][1] = REF_TVEC[0][0][1]
+                    print(REF_TVEC)
                     rmat1 = np.identity(3)
                     cv2.Rodrigues(REF_RVEC, rmat1)
                     rmat1 = np.transpose(rmat1)
                     relate_tvec = np.matmul(rmat1, tvec2[0][0])
-                    print(relate_tvec)
+
                     upper_H_offest = np.float32([[-1, 0.05, 0], [1, 0.05, 0]])
                     lower_H_offest = np.float32([[-1, -0.05, 0], [1, -0.05, 0]])
-                    imgpts_up, jac_up = cv2.projectPoints(upper_H_offest, REF_RVEC, tvec2, newcameramtx, (0,0,0,0))
-                    imgpts_lw, jac_lw = cv2.projectPoints(lower_H_offest, REF_RVEC, tvec2, newcameramtx, (0,0,0,0))
+                    imgpts_up, jac_up = cv2.projectPoints(upper_H_offest, REF_RVEC, self.ref_tvec, newcameramtx, (0,0,0,0))
+                    imgpts_lw, jac_lw = cv2.projectPoints(lower_H_offest, REF_RVEC, self.ref_tvec, newcameramtx, (0,0,0,0))
                     imgpts_up = np.int32(imgpts_up).reshape(-1, 2)
                     imgpts_lw = np.int32(imgpts_lw).reshape(-1, 2)
+
                     cv2.line(self.frame, tuple(imgpts_up[0]), tuple(imgpts_up[1]), (0, 0, 255), 2)
                     cv2.line(self.frame, tuple(imgpts_lw[0]), tuple(imgpts_lw[1]), (0, 0, 255), 2)
 
@@ -143,12 +150,14 @@ class main_widget(QWidget):
     def setup_oreintation(self):
         print('setup!')
         global REF_RVEC
-        REF_RVEC = self.CV_Thread.ref_revec
+        REF_RVEC = self.CV_Thread.ref_rvec
         print(REF_RVEC)
 
     def start_record(self):
         print('start_record')
-        self.running_state = 'Idle'
+        self.running_state = 'Recording'
+        global REF_TVEC
+        REF_TVEC = self.CV_Thread.ref_tvec
     def displayImage(self):
         size = self.image.shape
         step = self.image.size / size[0]
@@ -180,8 +189,10 @@ def load_camera_calib():
     global aruco_dict
     global parameters
     global REF_RVEC
+    global REF_TVEC
 
     REF_RVEC = None
+    REF_TVEC = None
     newcameramtx, roi = cv2.getOptimalNewCameraMatrix(mtx, dist, (w, h), 1, (w, h))
     markerLength = 0.15
     aruco_dict = aruco.Dictionary_get(aruco.DICT_6X6_250)
