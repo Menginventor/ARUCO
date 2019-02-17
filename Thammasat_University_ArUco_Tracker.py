@@ -19,7 +19,8 @@ from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtWidgets import *
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtCore import pyqtSignal
-from PyQt5.QtCore import QSettings
+
+import os
 import winsound
 import threading
 class CV_Thread(QtCore.QThread):
@@ -248,7 +249,8 @@ class main_widget(QWidget):
         if ret == 2048:#saving
             print('saving')
             self.saveFile()
-
+        os.remove('log/' + str(temp_log_filename) + '.csv')
+        print('deleted file')
 
         self.running_state = 'Idle'
         global REF_RVEC
@@ -277,6 +279,7 @@ class main_widget(QWidget):
                         'pos z': row[3]
                     }
                     writer.writerow(data)
+
 
     def showdialog(self):
         msg = QMessageBox()
