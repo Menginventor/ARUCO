@@ -23,6 +23,43 @@ from PyQt5.QtCore import pyqtSignal
 import os
 import winsound
 import threading
+import math
+
+def eulerAnglesToRotationMatrix(theta):
+    R_x = np.array([[1, 0, 0],
+                    [0, math.cos(theta[0]), -math.sin(theta[0])],
+                    [0, math.sin(theta[0]), math.cos(theta[0])]
+                    ])
+
+    R_y = np.array([[math.cos(theta[1]), 0, math.sin(theta[1])],
+                    [0, 1, 0],
+                    [-math.sin(theta[1]), 0, math.cos(theta[1])]
+                    ])
+
+    R_z = np.array([[math.cos(theta[2]), -math.sin(theta[2]), 0],
+                    [math.sin(theta[2]), math.cos(theta[2]), 0],
+                    [0, 0, 1]
+                    ])
+
+    R = np.matmul(R_z, np.matmul(R_y, R_x))
+    return R
+
+
+def rotationMatrixToEulerAngles(R):
+    sy = math.sqrt(R[0, 0] * R[0, 0] + R[1, 0] * R[1, 0])
+
+    singular = sy < 1e-6
+
+    if not singular:
+        x = math.atan2(R[2, 1], R[2, 2])
+        y = math.atan2(-R[2, 0], sy)
+        z = math.atan2(R[1, 0], R[0, 0])
+    else:
+        x = math.atan2(-R[1, 2], R[1, 1])
+        y = math.atan2(-R[2, 0], sy)
+        z = 0
+
+    return np.array([x, y, z])
 class CV_Thread(QtCore.QThread):
     cv_update_signal = pyqtSignal()
     beep_flag = False
@@ -52,6 +89,7 @@ class CV_Thread(QtCore.QThread):
             self.index_id_1 = None
             self.ref_rvec = None
             self.ref_tvec = None
+            self.tag_rvec = None
             for i in range(len(corners)):
                 if ids[i][0] == 0:
                     self.index_id_0 = i
@@ -78,6 +116,7 @@ class CV_Thread(QtCore.QThread):
                 if not REF_RVEC is None:
 
                     self.ref_tvec = np.copy(tvec2)
+                    self.tag_rvec = np.copy(rvec2)
 
                     rmat1 = np.identity(3)
                     cv2.Rodrigues(REF_RVEC, rmat1)
@@ -109,6 +148,18 @@ class CV_Thread(QtCore.QThread):
                     cv2.line(self.frame, tuple(imgpts_lw[0]), tuple(imgpts_lw[1]), (0, 0, 255), 2)
 
                     if self.parent.running_state == 'Recording':
+                        global TAG_RVEC
+                        rmat2 = np.identity(3)
+                        cv2.Rodrigues(rvec2, rmat2)
+                        tag_ref_mat = np.identity(3)
+                        cv2.Rodrigues(TAG_RVEC, tag_ref_mat)
+                        tag_ref_mat_inv = np.transpose(tag_ref_mat)
+                        tag_orientation_mat = np.matmul(tag_ref_mat_inv,rmat2)
+
+                        # rmat2 = np.matmul(eulerAnglesToRotationMatrix([math.pi*0.5,0,0]),rmat2)
+                        euler = rotationMatrixToEulerAngles(tag_orientation_mat)
+                        print(euler)
+
                         #print('recording')
                         relate_tvec = np.matmul(rmat1_inv, np.subtract(tvec2[0][0], REF_TVEC[0][0]))
                         #print(relate_tvec)
@@ -222,7 +273,10 @@ class main_widget(QWidget):
         print('start_record')
         self.running_state = 'Recording'
         global REF_TVEC
+        global TAG_RVEC
+
         REF_TVEC = self.CV_Thread.ref_tvec
+        TAG_RVEC = self.CV_Thread.tag_rvec
         global temp_log_filename
 
         file_name_err = True
@@ -261,6 +315,8 @@ class main_widget(QWidget):
     def saveFile(self):
         writen_file_name, _ = QFileDialog.getSaveFileName(self, "QFileDialog.getSaveFileName()", temp_log_filename,
                                               "CSV Files (*.csv)")
+        if writen_file_name == '':
+            return
         global fieldnames
         fieldnames = ['time stamp', 'pos x', 'pos y', 'pos z']
 
@@ -330,12 +386,14 @@ def load_camera_calib():
     global parameters
     global REF_RVEC
     global REF_TVEC
+    global TAG_RVEC
     global temp_log_filename
     global fieldnames
     fieldnames = ['time stamp', 'pos x', 'pos y', 'pos z']
     temp_log_filename = ''
     REF_RVEC = None
     REF_TVEC = None
+    TAG_RVEC = None
     newcameramtx, roi = cv2.getOptimalNewCameraMatrix(mtx, dist, (w, h), 1, (w, h))
     markerLength = 0.15
     aruco_dict = aruco.Dictionary_get(aruco.DICT_6X6_250)
