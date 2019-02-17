@@ -1,7 +1,8 @@
-'''
+"""
 Thank for gretest code
 https://github.com/TutorProgramacion/pyqt-tutorial/blob/master/10-opencv/main.py
-'''
+"""
+
 import sys
 import time
 import cv2
@@ -155,10 +156,8 @@ class CV_Thread(QtCore.QThread):
                         cv2.Rodrigues(TAG_RVEC, tag_ref_mat)
                         tag_ref_mat_inv = np.transpose(tag_ref_mat)
                         tag_orientation_mat = np.matmul(tag_ref_mat_inv,rmat2)
-
                         # rmat2 = np.matmul(eulerAnglesToRotationMatrix([math.pi*0.5,0,0]),rmat2)
                         euler = rotationMatrixToEulerAngles(tag_orientation_mat)
-                        print(euler)
 
                         #print('recording')
                         relate_tvec = np.matmul(rmat1_inv, np.subtract(tvec2[0][0], REF_TVEC[0][0]))
@@ -175,12 +174,20 @@ class CV_Thread(QtCore.QThread):
                                 print(e)
 
                         with open('log/' + str(temp_log_filename) + '.csv', 'a', newline='') as csvfile:
-                            #['time stamp', 'pos x', 'pos y', 'pos z']
+                            #['time stamp', 'pos x', 'pos y', 'pos z','rot x', 'rot y', 'rot z']
                             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
                             global start_time
                             crr_time = time.clock() - start_time
-
-                            writer.writerow({'time stamp':crr_time,'pos x': relate_tvec[0], 'pos y': relate_tvec[1], 'pos z': relate_tvec[2]})
+                            writing_data = {
+                                'time stamp': crr_time,
+                                'pos x': relate_tvec[0],
+                                'pos y': relate_tvec[1],
+                                'pos z': relate_tvec[2],
+                                'rot x': euler[0],
+                                'rot y': euler[1],
+                                'rot z': euler[2]
+                            }
+                            writer.writerow(writing_data)
                             #print(relate_tvec)
             self.cv_update_signal.emit()
 
@@ -309,7 +316,7 @@ class main_widget(QWidget):
         self.running_state = 'Idle'
         global REF_RVEC
         global REF_TVEC
-        REF_RVEC = None
+
         REF_TVEC = None
 
     def saveFile(self):
@@ -318,7 +325,7 @@ class main_widget(QWidget):
         if writen_file_name == '':
             return
         global fieldnames
-        fieldnames = ['time stamp', 'pos x', 'pos y', 'pos z']
+        #fieldnames = ['time stamp', 'pos x', 'pos y', 'pos z','rot x', 'rot y', 'rot z']
 
 
         with open(writen_file_name, 'w', newline='') as writen_file:
@@ -332,7 +339,10 @@ class main_widget(QWidget):
                         'time stamp': row[0],
                         'pos x': row[1],
                         'pos y': row[2],
-                        'pos z': row[3]
+                        'pos z': row[3],
+                        'rot x': row[4],
+                        'rot y': row[5],
+                        'rot z': row[6]
                     }
                     writer.writerow(data)
 
@@ -389,7 +399,7 @@ def load_camera_calib():
     global TAG_RVEC
     global temp_log_filename
     global fieldnames
-    fieldnames = ['time stamp', 'pos x', 'pos y', 'pos z']
+    fieldnames = ['time stamp', 'pos x', 'pos y', 'pos z','rot x', 'rot y', 'rot z']
     temp_log_filename = ''
     REF_RVEC = None
     REF_TVEC = None
@@ -436,11 +446,23 @@ class main_window(QMainWindow):
         self.setCentralWidget(self.main_widget)
 
     def closeEvent(self, event):
+        clean_junk()
         print('closing')
-        pass
 
 
 
+def clean_junk():
+    dir = os.getcwd()+'/log/'
+    try:
+        filelist = [f for f in os.listdir(dir)]
+        try:
+            for f in filelist:
+                os.remove(os.path.join(dir, f))
+        except Exception as e:
+            print(e)
+    except Exception as e:
+        print(e)
+    print('clean junk')
 def main():
     global cap
     cap = cv2.VideoCapture(0)
@@ -451,7 +473,9 @@ def main():
     app = QApplication(sys.argv)
     w = main_window()
     w.show()
+
     sys.exit(app.exec_())
+
 if __name__ == '__main__':
     main()
 
