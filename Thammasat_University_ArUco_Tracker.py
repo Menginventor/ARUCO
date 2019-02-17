@@ -110,7 +110,7 @@ class CV_Thread(QtCore.QThread):
                     if self.parent.running_state == 'Recording':
                         #print('recording')
                         relate_tvec = np.matmul(rmat1_inv, np.subtract(tvec2[0][0], REF_TVEC[0][0]))
-                        print(relate_tvec)
+                        #print(relate_tvec)
                         if abs(relate_tvec[1]) > 0.05:
 
                             try:
