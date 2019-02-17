@@ -1,6 +1,7 @@
 """
 Thank for gretest code
 https://github.com/TutorProgramacion/pyqt-tutorial/blob/master/10-opencv/main.py
+V1.0
 """
 
 import sys
