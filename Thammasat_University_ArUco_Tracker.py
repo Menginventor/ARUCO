@@ -20,14 +20,20 @@ from PyQt5.QtWidgets import *
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtCore import QSettings
-
+import winsound
+import threading
 class CV_Thread(QtCore.QThread):
     cv_update_signal = pyqtSignal()
+    beep_flag = False
     def __init__(self, parent):
         QtCore.QThread.__init__(self)
         self.parent = parent
     def __del__(self):
         self.wait()
+
+    def beep_thread(self):
+        winsound.Beep(2000, 100)
+        self.beep_flag = False
     def run(self):
 
         while True:
@@ -69,14 +75,26 @@ class CV_Thread(QtCore.QThread):
                                                                      newcameramtx, dist)
                 aruco.drawAxis(self.frame, newcameramtx, dist, rvec2, tvec2, 0.075)
                 if not REF_RVEC is None:
+
                     self.ref_tvec = np.copy(tvec2)
-                    if not (REF_TVEC is None):
-                        self.ref_tvec[0][0][0] = REF_TVEC[0][0][0]
-                        self.ref_tvec[0][0][1] = REF_TVEC[0][0][1]
-                    #print(REF_TVEC)
+
                     rmat1 = np.identity(3)
                     cv2.Rodrigues(REF_RVEC, rmat1)
-                    rmat1 = np.transpose(rmat1)
+                    rmat1_inv = np.transpose(rmat1)
+
+
+                    if not (REF_TVEC is None):# if REF_TVEC had set
+                        relate_REF_TVEC = np.matmul(rmat1_inv, REF_TVEC[0][0])
+                        relate_moving_TVEC = np.matmul(rmat1_inv, tvec2[0][0])
+
+                        relate_moving_TVEC[1] = relate_REF_TVEC[1]
+                        relate_moving_TVEC = np.matmul(rmat1, relate_moving_TVEC)
+                        self.ref_tvec[0][0] = np.copy(relate_moving_TVEC)
+
+
+
+                    #print(REF_TVEC)
+
 
 
                     upper_H_offest = np.float32([[-1, 0.05, 0], [1, 0.05, 0]])
@@ -88,14 +106,28 @@ class CV_Thread(QtCore.QThread):
 
                     cv2.line(self.frame, tuple(imgpts_up[0]), tuple(imgpts_up[1]), (0, 0, 255), 2)
                     cv2.line(self.frame, tuple(imgpts_lw[0]), tuple(imgpts_lw[1]), (0, 0, 255), 2)
+
                     if self.parent.running_state == 'Recording':
                         #print('recording')
+                        relate_tvec = np.matmul(rmat1_inv, np.subtract(tvec2[0][0], REF_TVEC[0][0]))
+                        print(relate_tvec)
+                        if abs(relate_tvec[1]) > 0.05:
+
+                            try:
+                                print('over limit!')
+                                if not self.beep_flag:
+                                    beep = threading.Thread(target=self.beep_thread)
+                                    beep.start()
+                                    self.beep_flag = True
+                            except Exception as e:
+                                print(e)
+
                         with open('log/' + str(temp_log_filename) + '.csv', 'a', newline='') as csvfile:
                             #['time stamp', 'pos x', 'pos y', 'pos z']
                             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
                             global start_time
                             crr_time = time.clock() - start_time
-                            relate_tvec = np.matmul(rmat1, np.subtract(tvec2[0][0], REF_TVEC[0][0]))
+
                             writer.writerow({'time stamp':crr_time,'pos x': relate_tvec[0], 'pos y': relate_tvec[1], 'pos z': relate_tvec[2]})
                             #print(relate_tvec)
             self.cv_update_signal.emit()
@@ -219,6 +251,10 @@ class main_widget(QWidget):
 
 
         self.running_state = 'Idle'
+        global REF_RVEC
+        global REF_TVEC
+        REF_RVEC = None
+        REF_TVEC = None
 
     def saveFile(self):
         writen_file_name, _ = QFileDialog.getSaveFileName(self, "QFileDialog.getSaveFileName()", temp_log_filename,
